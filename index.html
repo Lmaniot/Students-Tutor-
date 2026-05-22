@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PNG Smart Tutor — SBC & OBE Aligned</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0b0f1a;
+  --bg2: #111827;
+  --bg3: #1a2235;
+  --card: #141e2f;
+  --border: #1e2d45;
+  --accent: #00c896;
+  --accent2: #0ea5e9;
+  --accent3: #f59e0b;
+  --text: #e8edf5;
+  --text2: #8fa3c0;
+  --text3: #5a7090;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,150,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,150,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; top: -200px; right: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(0,200,150,0.08) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: relative; z-index: 10;
+  padding: 0 2rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(11,15,26,0.95);
+  backdrop-filter: blur(20px);
+}
+.header-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 66px;
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px rgba(0,200,150,0.3);
+}
+.logo-text { font-family: 'Fraunces', serif; font-weight: 900; font-size: 1.25rem; }
+.logo-text span { color: var(--accent); }
+.logo-sub { font-size: 0.63rem; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 1px; }
+.header-badges { display: flex; gap: 6px; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.67rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.badge-sbc { background: rgba(0,200,150,0.12); color: var(--accent); border: 1px solid rgba(0,200,150,0.3); }
+.badge-obe { background: rgba(14,165,233,0.12); color: var(--accent2); border: 1px solid rgba(14,165,233,0.3); }
+
+/* ── GROQ API KEY BAR ── */
+.api-bar {
+  position: relative; z-index: 9;
+  background: linear-gradient(90deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.04) 100%);
+  border-bottom: 1px solid rgba(245,158,11,0.25);
+  padding: 0.75rem 2rem;
+}
+.api-bar-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap;
+}
+.api-bar-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.api-bar-label {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent3);
+  white-space: nowrap; flex-shrink: 0;
+}
+.api-key-wrap {
+  position: relative; flex: 1; min-width: 220px; max-width: 400px;
+}
+.api-key-input {
+  width: 100%; padding: 8px 38px 8px 12px;
+  background: rgba(11,15,26,0.8);
+  border: 1.5px solid rgba(245,158,11,0.35);
+  border-radius: var(--radius-sm);
+  color: var(--text); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.api-key-input:focus {
+  border-color: var(--accent3);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+}
+.api-key-input::placeholder { color: var(--text3); font-family: 'Sora', sans-serif; font-size: 0.76rem; }
+.key-eye {
+  position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 14px; line-height: 1;
+  transition: color 0.2s; padding: 2px;
+}
+.key-eye:hover { color: var(--accent3); }
+.api-status {
+  font-size: 0.7rem; color: var(--text3);
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap; padding: 5px 10px;
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--bg3);
+}
+.api-status.ok {
+  color: var(--accent); border-color: rgba(0,200,150,0.3);
+  background: rgba(0,200,150,0.08);
+}
+.api-status.ok::before { content: '●'; font-size: 0.45rem; animation: pulse-dot 2s ease infinite; }
+.api-status.err { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.07); }
+@keyframes pulse-dot { 0%,100%{opacity:1}50%{opacity:0.3} }
+.groq-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 20px;
+  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.28);
+  font-size: 0.67rem; font-weight: 700; color: var(--accent3);
+  letter-spacing: 0.05em; white-space: nowrap;
+}
+.api-get-key {
+  font-size: 0.68rem; color: var(--accent3); text-decoration: none;
+  opacity: 0.75; white-space: nowrap; margin-left: auto;
+  transition: opacity 0.2s;
+  display: flex; align-items: center; gap: 4px;
+}
+.api-get-key:hover { opacity: 1; text-decoration: underline; }
+@media (max-width: 680px) {
+  .api-bar-inner { gap: 8px; }
+  .groq-pill { display: none; }
+  .api-get-key { margin-left: 0; }
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 2;
+  text-align: center; padding: 3rem 2rem 2rem;
+}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 20px;
+  background: rgba(0,200,150,0.1); border: 1px solid rgba(0,200,150,0.25);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 1.2rem;
+}
+.hero-tag::before { content: '●'; font-size: 0.45rem; animation: pulse-dot 2s ease infinite; }
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.9rem, 5vw, 3.1rem);
+  font-weight: 900; line-height: 1.1; margin-bottom: 0.8rem;
+}
+.hero h1 em { font-style: italic; color: var(--accent); }
+.hero p { color: var(--text2); font-size: 0.97rem; max-width: 500px; margin: 0 auto; line-height: 1.65; }
+
+/* ── QUICK TOPICS ── */
+.quick-topics {
+  position: relative; z-index: 2;
+  max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 1.2rem;
+}
+.qt-label { font-size: 0.68rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.6rem; font-weight: 600; }
+.qt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.qt-chip {
+  padding: 5px 12px; border-radius: 20px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); font-size: 0.72rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.qt-chip:hover { border-color: var(--accent2); color: var(--accent2); }
+
+/* ── LAYOUT ── */
+.container {
+  position: relative; z-index: 2;
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+  display: grid; grid-template-columns: 340px 1fr;
+  gap: 1.5rem; align-items: start;
+}
+
+/* ── PANEL ── */
+.panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  position: sticky; top: 1.5rem;
+}
+.panel-header {
+  padding: 1rem 1.3rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.panel-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: rgba(0,200,150,0.12);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.panel-header h2 { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text2); }
+.panel-body { padding: 1.3rem; display: flex; flex-direction: column; gap: 1rem; }
+
+label { display: block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 5px; }
+select, input {
+  width: 100%; padding: 9px 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'Sora', sans-serif; font-size: 0.84rem;
+  transition: border-color 0.2s, box-shadow 0.2s; appearance: none; outline: none;
+}
+select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a7090' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,200,150,0.12); }
+select option { background: #1a2235; }
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mode-pill {
+  padding: 8px 5px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text2); font-size: 0.7rem; font-weight: 600;
+  text-align: center; cursor: pointer; transition: all 0.2s; user-select: none;
+}
+.mode-pill:hover { border-color: var(--accent); color: var(--accent); }
+.mode-pill.active { background: rgba(0,200,150,0.1); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(0,200,150,0.12); }
+.mode-pill .pill-icon { font-size: 1rem; display: block; margin-bottom: 2px; }
+
+.btn-start {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, var(--accent), #00a878);
+  border: none; border-radius: var(--radius-sm);
+  color: #001a10; font-family: 'Sora', sans-serif;
+  font-size: 0.88rem; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,200,150,0.28);
+  margin-top: 0.2rem;
+}
+.btn-start:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,200,150,0.38); }
+.btn-start:active { transform: translateY(0); }
+.btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── OUTPUT PANEL ── */
+.output-panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; min-height: 500px;
+}
+.output-header {
+  padding: 0.9rem 1.3rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.output-header-left { display: flex; align-items: center; gap: 10px; }
+.output-title { font-size: 0.8rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+.output-actions { display: flex; gap: 6px; }
+.btn-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+.output-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 460px; padding: 3rem; text-align: center;
+}
+.empty-icon { font-size: 2.8rem; margin-bottom: 1rem; opacity: 0.25; }
+.empty-title { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 600; color: var(--text2); margin-bottom: 0.5rem; }
+.empty-sub { font-size: 0.8rem; color: var(--text3); line-height: 1.65; }
+
+.loading-state {
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 460px; gap: 1.2rem;
+}
+.loader-ring {
+  width: 50px; height: 50px;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text { color: var(--text2); font-size: 0.84rem; }
+.loader-sub { color: var(--text3); font-size: 0.73rem; }
+
+.lesson-content { display: none; padding: 1.7rem; }
+.lesson-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 1.4rem; }
+.meta-chip { padding: 4px 12px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; }
+.chip-grade { background: rgba(245,158,11,0.1); color: var(--accent3); border: 1px solid rgba(245,158,11,0.28); }
+.chip-subject { background: rgba(14,165,233,0.1); color: var(--accent2); border: 1px solid rgba(14,165,233,0.28); }
+.chip-mode { background: rgba(0,200,150,0.08); color: var(--accent); border: 1px solid rgba(0,200,150,0.22); }
+.chip-groq { background: rgba(245,158,11,0.08); color: var(--accent3); border: 1px solid rgba(245,158,11,0.22); }
+
+#lesson-output { font-size: 0.91rem; line-height: 1.8; color: var(--text); }
+#lesson-output h1, #lesson-output h2, #lesson-output h3 { font-family: 'Fraunces', serif; margin: 1.4rem 0 0.6rem; line-height: 1.3; }
+#lesson-output h1 { font-size: 1.55rem; color: var(--accent); }
+#lesson-output h2 { font-size: 1.15rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.35rem; }
+#lesson-output h3 { font-size: 0.97rem; color: var(--accent2); }
+#lesson-output p { margin: 0.55rem 0; }
+#lesson-output ul, #lesson-output ol { margin: 0.5rem 0 0.5rem 1.3rem; }
+#lesson-output li { margin: 0.28rem 0; }
+#lesson-output strong { color: var(--accent3); font-weight: 600; }
+#lesson-output em { color: var(--accent2); font-style: italic; }
+#lesson-output code { font-family: 'JetBrains Mono', monospace; background: var(--bg3); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; color: var(--accent); }
+#lesson-output pre { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin: 1rem 0; overflow-x: auto; }
+#lesson-output pre code { background: none; border: none; padding: 0; }
+#lesson-output blockquote { border-left: 3px solid var(--accent); padding: 0.6rem 1rem; margin: 0.9rem 0; background: rgba(0,200,150,0.05); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; color: var(--text2); font-style: italic; }
+#lesson-output hr { border: none; border-top: 1px solid var(--border); margin: 1.4rem 0; }
+#lesson-output table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.84rem; }
+#lesson-output th { background: var(--bg3); padding: 7px 11px; border: 1px solid var(--border); text-align: left; font-weight: 600; color: var(--accent2); }
+#lesson-output td { padding: 7px 11px; border: 1px solid var(--border); color: var(--text2); }
+#lesson-output tr:hover td { background: rgba(255,255,255,0.02); }
+
+.cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent); margin-left: 2px; animation: blink 1s ease infinite; vertical-align: middle; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 100;
+  background: var(--card); border: 1px solid var(--accent);
+  border-radius: var(--radius-sm); padding: 0.75rem 1.1rem;
+  font-size: 0.8rem; color: var(--accent);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transform: translateY(100px); opacity: 0; transition: all 0.3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .container { grid-template-columns: 1fr; }
+  .panel { position: static; }
+  .hero h1 { font-size: 1.7rem; }
+  .header-badges { display: none; }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div>
+        <div class="logo-text">PNG <span>Smart</span> Tutor</div>
+        <div class="logo-sub">Grades 7–12 · AI Learning System</div>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-sbc">SBC Aligned</span>
+      <span class="badge badge-obe">OBE Framework</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ GROQ API KEY BAR ═══ -->
+<div class="api-bar">
+  <div class="api-bar-inner">
+    <div class="api-bar-icon">⚡</div>
+    <div class="api-bar-label">Groq API Key</div>
+
+    <div class="api-key-wrap">
+      <input
+        class="api-key-input"
+        id="groq-api-key"
+        type="password"
+        placeholder="Paste your Groq key here — gsk_…"
+        oninput="onKeyInput()"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="key-eye" id="eye-btn" onclick="toggleEye()" title="Show / hide key">👁</button>
+    </div>
+
+    <div class="api-status" id="api-status">No key entered</div>
+
+    <div class="groq-pill">⚡ Groq · llama-3.3-70b</div>
+
+    <a class="api-get-key" href="https://console.groq.com/keys" target="_blank" rel="noopener">
+      Get free key ↗
+    </a>
+  </div>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="hero-tag">Papua New Guinea Curriculum</div>
+  <h1>Your Personal <em>AI Teacher</em><br>Always Ready to Teach</h1>
+  <p>Lessons built on the PNG Standards Based Curriculum and Outcomes Based Education framework — just for you.</p>
+</div>
+
+<!-- ═══ QUICK TOPICS ═══ -->
+<div class="quick-topics">
+  <div class="qt-label">Popular Topics</div>
+  <div class="qt-chips">
+    <div class="qt-chip" onclick="quickFill('Grade 9','General Mathematics','Algebra','Introduction to Linear Equations')">📐 Linear Equations</div>
+    <div class="qt-chip" onclick="quickFill('Grade 11','Advanced Mathematics','Calculus','Introduction to Differentiation')">∫ Differentiation</div>
+    <div class="qt-chip" onclick="quickFill('Grade 10','Biology','Cell Biology','Cell Structure and Function')">🔬 Cell Structure</div>
+    <div class="qt-chip" onclick="quickFill('Grade 8','English','Grammar','Parts of Speech')">📖 Parts of Speech</div>
+    <div class="qt-chip" onclick="quickFill('Grade 10','ICT','Programming','Introduction to Python')">💻 Python Basics</div>
+    <div class="qt-chip" onclick="quickFill('Grade 9','Business Studies','Entrepreneurship','Starting a Small Business')">💼 Entrepreneurship</div>
+    <div class="qt-chip" onclick="quickFill('Grade 7','Science','Physics','Forces and Motion')">⚡ Forces & Motion</div>
+    <div class="qt-chip" onclick="quickFill('Grade 12','Advanced Mathematics','Probability','Probability Theory')">🎲 Probability</div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="container">
+
+  <!-- LEFT: LESSON SETUP -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">⚙️</div>
+      <h2>Lesson Setup</h2>
+    </div>
+    <div class="panel-body">
+
+      <div>
+        <label>Grade Level</label>
+        <select id="grade">
+          <option value="">Select Grade…</option>
+          <option>Grade 7</option><option>Grade 8</option><option>Grade 9</option>
+          <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Subject</label>
+        <select id="subject">
+          <option value="">Select Subject…</option>
+          <optgroup label="Mathematics">
+            <option>General Mathematics</option>
+            <option>Advanced Mathematics</option>
+          </optgroup>
+          <optgroup label="Sciences">
+            <option>Science (General)</option>
+            <option>Biology</option>
+            <option>Chemistry</option>
+            <option>Physics</option>
+            <option>Environmental Science</option>
+          </optgroup>
+          <optgroup label="Languages">
+            <option>English</option>
+          </optgroup>
+          <optgroup label="Technology">
+            <option>ICT</option>
+          </optgroup>
+          <optgroup label="Commerce & Social">
+            <option>Business Studies</option>
+            <option>Social Science</option>
+            <option>Personal Development</option>
+          </optgroup>
+          <optgroup label="Arts & Technical">
+            <option>Visual Arts</option>
+            <option>Technical Studies</option>
+            <option>Home Economics</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div>
+        <label>Topic</label>
+        <input type="text" id="topic" placeholder="e.g. Fractions, Cell Division, Networking…"/>
+      </div>
+
+      <div>
+        <label>Lesson Title</label>
+        <input type="text" id="lesson-title" placeholder="e.g. Adding and Subtracting Fractions"/>
+      </div>
+
+      <div>
+        <label>Learning Mode</label>
+        <div class="mode-grid" id="mode-grid">
+          <div class="mode-pill active" data-mode="Normal Learning"><span class="pill-icon">📘</span>Normal Learning</div>
+          <div class="mode-pill" data-mode="Beginner Mode"><span class="pill-icon">🌱</span>Beginner Mode</div>
+          <div class="mode-pill" data-mode="Exam Revision"><span class="pill-icon">📝</span>Exam Revision</div>
+          <div class="mode-pill" data-mode="Practice Exercises"><span class="pill-icon">💪</span>Practice Exercises</div>
+          <div class="mode-pill" data-mode="Assessment Preparation" style="grid-column:1/-1"><span class="pill-icon">🏆</span>Assessment Preparation</div>
+        </div>
+      </div>
+
+      <button class="btn-start" id="start-btn" onclick="startLesson()">✨ Start My Lesson</button>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: OUTPUT -->
+  <div class="output-panel">
+    <div class="output-header">
+      <div class="output-header-left">
+        <div class="panel-icon">📄</div>
+        <span class="output-title">Lesson Output</span>
+      </div>
+      <div class="output-actions">
+        <button class="btn-icon" title="Copy lesson" onclick="copyLesson()">📋</button>
+        <button class="btn-icon" title="Print / Save PDF" onclick="window.print()">🖨️</button>
+        <button class="btn-icon" title="Read aloud" onclick="readAloud()">🔊</button>
+      </div>
+    </div>
+
+    <div class="output-empty" id="empty-state">
+      <div class="empty-icon">🗺️</div>
+      <div class="empty-title">Your lesson will appear here</div>
+      <div class="empty-sub">Fill in the form and click<br><strong style="color:var(--accent)">Start My Lesson</strong> to begin.</div>
+    </div>
+
+    <div class="loading-state" id="loading-state">
+      <div class="loader-ring"></div>
+      <div class="loader-text">Your AI teacher is preparing your lesson…</div>
+      <div class="loader-sub" id="loading-sub">Aligning with PNG SBC & OBE standards</div>
+    </div>
+
+    <div class="lesson-content" id="lesson-content">
+      <div class="lesson-meta" id="lesson-meta"></div>
+      <div id="lesson-output"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Mode pills ──
+let selectedMode = 'Normal Learning';
+document.querySelectorAll('.mode-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.mode-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    selectedMode = p.dataset.mode;
+  });
+});
+
+// ── API key ──
+function onKeyInput() {
+  const key = document.getElementById('groq-api-key').value.trim();
+  const s = document.getElementById('api-status');
+  if (key.startsWith('gsk_') && key.length > 20) {
+    s.textContent = 'Key ready ✓'; s.className = 'api-status ok';
+    try { localStorage.setItem('groq_key', key); } catch(e){}
+  } else if (!key) {
+    s.textContent = 'No key entered'; s.className = 'api-status';
+  } else {
+    s.textContent = 'Invalid format'; s.className = 'api-status err';
+  }
+}
+function toggleEye() {
+  const inp = document.getElementById('groq-api-key');
+  const btn = document.getElementById('eye-btn');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+// Restore saved key
+try {
+  const saved = localStorage.getItem('groq_key');
+  if (saved) { document.getElementById('groq-api-key').value = saved; onKeyInput(); }
+} catch(e){}
+
+// ── Quick fill ──
+function quickFill(grade, subject, topic, title) {
+  document.getElementById('grade').value = grade;
+  document.getElementById('subject').value = subject;
+  document.getElementById('topic').value = topic;
+  document.getElementById('lesson-title').value = title;
+  document.getElementById('start-btn').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Copy ──
+function copyLesson() {
+  const text = document.getElementById('lesson-output').innerText;
+  if (!text) { showToast('No lesson to copy yet.'); return; }
+  navigator.clipboard.writeText(text).then(() => showToast('✅ Copied to clipboard!'));
+}
+
+// ── Read aloud ──
+function readAloud() {
+  const text = document.getElementById('lesson-output').innerText;
+  if (!text) { showToast('No lesson to read yet.'); return; }
+  if (window.speechSynthesis.speaking) { window.speechSynthesis.cancel(); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95; window.speechSynthesis.speak(u);
+  showToast('🔊 Reading aloud… tap again to stop.');
+}
+
+// ── Markdown renderer ──
+function renderMarkdown(md) {
+  return md
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m + '</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .trim();
+}
+
+// ── Build prompt ──
+function buildPrompt(grade, subject, topic, title, mode) {
+  return `You are an expert PNG (Papua New Guinea) classroom teacher and AI tutor.
+You teach strictly according to the PNG SBC (Standards Based Curriculum) and OBE (Outcomes Based Education) frameworks.
+
+STUDENT INPUT:
+- Grade Level: ${grade}
+- Subject: ${subject}
+- Topic: ${topic}
+- Lesson Title: ${title}
+- Learning Mode: ${mode}
+
+TEACHING PERSONALITY:
+Teach EXACTLY like a real ${subject} teacher — NOT like a generic AI. Adapt teaching style, tone, language difficulty, and activities to the subject and grade level.
+
+SUBJECT-SPECIFIC BEHAVIOR:
+- ICT → practical computer skills, real projects, troubleshooting, technology in real life
+- General Mathematics → step-by-step calculations, real-life examples, guided practice
+- Advanced Mathematics → formulas, derivations, analytical thinking, exam-style problems
+- Biology/Chemistry/Physics/Science → scientific inquiry, observations, experiments, real-world connections
+- English → grammar, communication, comprehension, writing skills, vocabulary
+- Business Studies → entrepreneurship, practical finance, local PNG business examples
+- Social Science → history, geography, citizenship, PNG culture and society
+- Arts/Technical → creativity, practical demonstrations, project work
+
+LESSON STRUCTURE (use markdown headings exactly):
+
+# [Lesson Title] — ${grade} ${subject}
+
+## 📋 Lesson Overview
+Engaging intro. Why is this lesson important? Real-life connection in PNG.
+
+## 🎯 Learning Outcomes (OBE)
+By the end of this lesson, students should be able to:
+- [outcome 1 — knowledge]
+- [outcome 2 — understanding]
+- [outcome 3 — skill/application]
+
+## 🔁 Prior Knowledge Check
+2–3 simple review questions connecting previous learning to this topic.
+
+## 📚 Key Concepts & Explanation
+Teach step-by-step. Simple English. PNG-relevant examples. Show formulas for maths. Code for ICT.
+
+## ✏️ Worked Examples
+2–3 complete step-by-step worked examples with reasoning.
+
+## 🧩 Student Activities
+1. **Individual Activity**
+2. **Group/Pair Activity**
+3. **Critical Thinking Question**
+4. **Practical Task** (if applicable)
+
+## ✅ Continuous Assessment (OBE)
+3–5 questions (multiple choice, short answer, application) with mark scheme.
+
+## 📝 Lesson Summary
+3–5 key points in simple bullet points.
+
+## 🏠 Homework & Independent Practice
+3–5 tasks including one real-life application relevant to PNG.
+
+## 🎓 Exam Preparation
+4–6 SBC/OBE-style exam questions with marking guide.
+
+---
+
+LEARNING MODE — ${mode}:
+${mode === 'Beginner Mode' ? '→ Very simple language. Extra slow pace. More examples. Build confidence.' : ''}
+${mode === 'Normal Learning' ? '→ Standard classroom pace. Balance explanation, examples, activities.' : ''}
+${mode === 'Exam Revision' ? '→ Focus on exam-style questions, tips, quick recaps, past question style.' : ''}
+${mode === 'Practice Exercises' ? '→ Maximize practice problems. Less explanation, more doing. Answers included.' : ''}
+${mode === 'Assessment Preparation' ? '→ Assessment tasks, rubrics, performance indicators, self-assessment checklist.' : ''}
+
+GRADE LEVEL ADAPTATION:
+${grade === 'Grade 7' || grade === 'Grade 8' ? '→ Very simple English, guided step-by-step, encouragement, basic concepts.' : ''}
+${grade === 'Grade 9' || grade === 'Grade 10' ? '→ Moderate complexity, more independence, practical application, critical thinking.' : ''}
+${grade === 'Grade 11' || grade === 'Grade 12' ? '→ Advanced depth, examination-level, analytical tasks, national exam preparation.' : ''}
+
+Now teach the complete lesson. Be thorough, engaging, and curriculum-aligned. Write like a real PNG teacher speaking to their class.`;
+}
+
+// ── Start lesson ──
+async function startLesson() {
+  const grade   = document.getElementById('grade').value;
+  const subject = document.getElementById('subject').value;
+  const topic   = document.getElementById('topic').value.trim();
+  const title   = document.getElementById('lesson-title').value.trim();
+  const apiKey  = document.getElementById('groq-api-key').value.trim();
+
+  if (!grade || !subject || !topic || !title) {
+    showToast('⚠️ Please fill in all lesson fields first.'); return;
+  }
+  if (!apiKey) {
+    showToast('⚠️ Please enter your Groq API key in the bar above.');
+    document.getElementById('groq-api-key').focus(); return;
+  }
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('lesson-content').style.display = 'none';
+  const ls = document.getElementById('loading-state');
+  ls.style.display = 'flex';
+  document.getElementById('start-btn').disabled = true;
+
+  const msgs = [
+    'Aligning with PNG SBC & OBE standards…',
+    'Preparing your lesson structure…',
+    'Generating examples and activities…',
+    'Adding assessment questions…',
+    'Almost ready for class…'
+  ];
+  let mi = 0;
+  const interval = setInterval(() => {
+    document.getElementById('loading-sub').textContent = msgs[++mi % msgs.length];
+  }, 2000);
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 4096,
+        stream: true,
+        temperature: 0.7,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert PNG classroom teacher and AI tutor aligned to the PNG SBC and OBE curriculum. Always respond in well-structured markdown.'
+          },
+          { role: 'user', content: buildPrompt(grade, subject, topic, title, selectedMode) }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e?.error?.message || `Groq API error ${res.status}`);
+    }
+
+    clearInterval(interval);
+    ls.style.display = 'none';
+
+    const contentEl = document.getElementById('lesson-content');
+    contentEl.style.display = 'block';
+
+    document.getElementById('lesson-meta').innerHTML = `
+      <span class="meta-chip chip-grade">${grade}</span>
+      <span class="meta-chip chip-subject">📚 ${subject}</span>
+      <span class="meta-chip chip-mode">🎯 ${selectedMode}</span>
+      <span class="meta-chip chip-groq">⚡ Groq · llama-3.3-70b</span>
+    `;
+
+    const out = document.getElementById('lesson-output');
+    out.innerHTML = '<span class="cursor"></span>';
+
+    let raw = '';
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      for (const line of dec.decode(value, { stream: true }).split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const d = line.slice(6).trim();
+        if (d === '[DONE]') continue;
+        try {
+          const delta = JSON.parse(d).choices?.[0]?.delta?.content;
+          if (delta) {
+            raw += delta;
+            out.innerHTML = renderMarkdown(raw) + '<span class="cursor"></span>';
+            out.parentElement.parentElement.scrollTop = out.scrollHeight;
+          }
+        } catch(e) {}
+      }
+    }
+
+    out.innerHTML = renderMarkdown(raw);
+    showToast('✅ Lesson ready! Good luck studying.');
+
+  } catch(err) {
+    clearInterval(interval);
+    ls.style.display = 'none';
+    const es = document.getElementById('empty-state');
+    es.style.display = 'flex';
+    es.innerHTML = `<div class="empty-icon">⚠️</div><div class="empty-title">Something went wrong</div><div class="empty-sub">${err.message}</div>`;
+    showToast('❌ ' + err.message);
+  } finally {
+    document.getElementById('start-btn').disabled = false;
+  }
+}
+
+// Enter key in text fields
+document.querySelectorAll('input[type=text]').forEach(inp => {
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') startLesson(); });
+});
+</script>
+</body>
+</html>
